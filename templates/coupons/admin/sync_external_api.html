@@ -1,0 +1,207 @@
+{% extends 'coupons/admin/base_admin.html' %}
+
+{% block title %}Đồng bộ API - Admin CouponHub{% endblock %}
+{% block page_title %}🔄 Đồng bộ mã từ API Sàn TMĐT{% endblock %}
+
+{% block content %}
+<!-- Cấu hình API cho từng sàn -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    {% for platform in platforms_data %}
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-{{ platform.color }}-500 to-{{ platform.color }}-600 p-4 text-white">
+            <div class="flex items-center">
+                <i class="fas {{ platform.icon }} text-2xl mr-3"></i>
+                <div>
+                    <h3 class="font-bold text-lg">{{ platform.name }}</h3>
+                    <div class="text-xs opacity-80">Cấu hình API</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="save_config">
+                <input type="hidden" name="platform" value="{{ platform.key }}">
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">API URL</label>
+                    <input type="text" name="api_url"
+                           value="{% if platform.config %}{{ platform.config.api_url }}{% else %}{{ platform.default_api_url }}{% endif %}"
+                           placeholder="Nhập URL bất kỳ..."
+                           class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-{{ platform.color }}-500">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">{{ platform.api_key_label }}</label>
+                    <input type="text" name="api_key"
+                           value="{% if platform.config %}{{ platform.config.api_key }}{% endif %}"
+                           placeholder="Nhập key bất kỳ..."
+                           class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-{{ platform.color }}-500">
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" name="is_active" id="active_{{ platform.key }}"
+                           {% if not platform.config or platform.config.is_active %}checked{% endif %}
+                           class="w-4 h-4 text-{{ platform.color }}-600 rounded focus:ring-2 focus:ring-{{ platform.color }}-500">
+                    <label for="active_{{ platform.key }}" class="ml-2 text-sm text-gray-700">Kích hoạt</label>
+                </div>
+                
+                <button type="submit" 
+                        class="w-full bg-{{ platform.color }}-600 text-white px-4 py-2 rounded-lg hover:bg-{{ platform.color }}-700 transition text-sm font-semibold">
+                    <i class="fas fa-save mr-2"></i>Lưu cấu hình
+                </button>
+                
+                {% if platform.config %}
+                <div class="text-xs text-gray-500 text-center">
+                    <i class="fas fa-check-circle text-green-600 mr-1"></i>
+                    Đã cấu hình
+                    {% if platform.config.last_sync %}
+                    <br>Sync lần cuối: {{ platform.config.last_sync|date:"d/m/Y H:i" }}
+                    {% endif %}
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Thống kê -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="text-4xl font-bold mb-2">{{ stats.total_coupons }}</div>
+        <div class="text-blue-100">Tổng số mã</div>
+    </div>
+    
+    <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="text-4xl font-bold mb-2">{{ stats.synced_coupons }}</div>
+        <div class="text-green-100">Đã đồng bộ</div>
+    </div>
+    
+    <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="text-4xl font-bold mb-2">{{ stats.shopee_count }}</div>
+        <div class="text-orange-100">Shopee</div>
+    </div>
+    
+    <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="text-4xl font-bold mb-2">{{ stats.lazada_count }}</div>
+        <div class="text-purple-100">Lazada</div>
+    </div>
+</div>
+
+<!-- Đồng bộ từng sàn -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    {% for platform in platforms_data %}
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-1">
+        <div class="bg-gradient-to-r from-{{ platform.color }}-500 to-{{ platform.color }}-600 p-6 text-white">
+            <div class="flex items-center justify-between mb-4">
+                <i class="fas {{ platform.icon }} text-5xl opacity-20"></i>
+                <div class="text-right">
+                    <div class="text-3xl font-bold">
+                        {% if platform.name == 'Shopee' %}{{ stats.shopee_count }}
+                        {% elif platform.name == 'Lazada' %}{{ stats.lazada_count }}
+                        {% else %}{{ stats.tiktok_count }}{% endif %}
+                    </div>
+                    <div class="text-sm opacity-80">mã hiện có</div>
+                </div>
+            </div>
+            <h3 class="text-2xl font-bold">{{ platform.name }}</h3>
+        </div>
+        
+        <div class="p-6">
+            <div class="mb-4 space-y-3">
+                <div>
+                    <div class="text-xs text-gray-500 mb-1">API Endpoint</div>
+                    <div class="font-mono text-xs bg-gray-100 px-3 py-2 rounded break-all">
+                        {{ platform.api_url }}
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="text-xs text-gray-500 mb-1">Authentication</div>
+                    <div class="text-xs bg-green-50 text-green-700 px-3 py-2 rounded border border-green-200">
+                        <i class="fas fa-key mr-1"></i>{{ platform.api_key_label }}
+                    </div>
+                </div>
+            </div>
+            
+            <form method="post" onsubmit="return confirm('Đồng bộ mã giảm giá từ {{ platform.name }} API?');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="sync">
+                <input type="hidden" name="platform_table" value="{{ platform.table }}">
+                <input type="hidden" name="platform_name" value="{{ platform.name }}">
+                <input type="hidden" name="platform_key" value="{{ platform.key }}">
+                
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-{{ platform.color }}-500 to-{{ platform.color }}-600 text-white px-6 py-3 rounded-lg hover:from-{{ platform.color }}-600 hover:to-{{ platform.color }}-700 transition font-semibold shadow-md flex items-center justify-center"
+                        {% if not platform.config or not platform.config.is_active %}disabled{% endif %}>
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Đồng bộ từ {{ platform.name }}
+                </button>
+            </form>
+            
+            <div class="mt-3 text-xs text-gray-500 text-center">
+                <i class="fas fa-clock mr-1"></i>
+                Cập nhật real-time từ API
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+
+<!-- Hướng dẫn -->
+<div class="bg-white rounded-xl shadow-lg p-6">
+    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+        <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+        Cách thức hoạt động
+    </h2>
+    
+    <div class="space-y-4">
+        <div class="flex items-start">
+            <div class="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 flex-shrink-0">1</div>
+            <div>
+                <h3 class="font-semibold text-gray-800 mb-1">Nhập thông tin API</h3>
+                <p class="text-gray-600 text-sm">Điền API URL và API Key cho từng sàn (có thể điền bất kỳ giá trị nào)</p>
+            </div>
+        </div>
+        
+        <div class="flex items-start">
+            <div class="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 flex-shrink-0">2</div>
+            <div>
+                <h3 class="font-semibold text-gray-800 mb-1">Lưu cấu hình</h3>
+                <p class="text-gray-600 text-sm">Click "Lưu cấu hình" để lưu thông tin API</p>
+            </div>
+        </div>
+        
+        <div class="flex items-start">
+            <div class="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 flex-shrink-0">3</div>
+            <div>
+                <h3 class="font-semibold text-gray-800 mb-1">Đồng bộ dữ liệu</h3>
+                <p class="text-gray-600 text-sm">Click "Đồng bộ từ [Tên sàn]" để lấy mã từ API về website</p>
+            </div>
+        </div>
+        
+        <div class="flex items-start">
+            <div class="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 flex-shrink-0">4</div>
+            <div>
+                <h3 class="font-semibold text-gray-800 mb-1">Kiểm tra kết quả</h3>
+                <p class="text-gray-600 text-sm">Xem mã mới tại <a href="{% url 'coupons:admin_coupon_list' %}" class="text-blue-600 hover:underline">Quản lý Mã giảm giá</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script -->
+<script>
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const button = this.querySelector('button[type="submit"]');
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang kết nối API...';
+    });
+});
+</script>
+{% endblock %}

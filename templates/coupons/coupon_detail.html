@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ coupon.title }} - CouponHub{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-3xl mx-auto">
+        <!-- Breadcrumb -->
+        <nav class="mb-6">
+            <a href="{% url 'coupons:home' %}" class="text-blue-600 hover:text-blue-700">Trang chủ</a>
+            <span class="mx-2 text-gray-400">/</span>
+            <span class="text-gray-600">Chi tiết mã</span>
+        </nav>
+
+        <!-- Card chi tiết -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6 pb-6 border-b">
+                <div class="flex items-center space-x-4">
+                    {% if coupon.platform.name == 'Shopee' %}
+                        <i class="fas fa-shopping-bag text-orange-500 text-4xl"></i>
+                    {% elif coupon.platform.name == 'Lazada' %}
+                        <i class="fas fa-store text-orange-400 text-4xl"></i>
+                    {% elif coupon.platform.name == 'TikTok' %}
+                        <i class="fab fa-tiktok text-black text-4xl"></i>
+                    {% else %}
+                        <i class="fas fa-store text-blue-500 text-4xl"></i>
+                    {% endif %}
+                    <div>
+                        <p class="text-sm text-gray-500">Nền tảng</p>
+                        <p class="text-xl font-bold text-gray-800">{{ coupon.platform.name }}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">Mã code</p>
+                    <p class="text-2xl font-bold text-blue-600 font-mono">{{ coupon.code }}</p>
+                </div>
+            </div>
+
+            <!-- Tiêu đề -->
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">{{ coupon.title }}</h1>
+
+            <!-- Thông tin chi tiết -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500 mb-1">Loại giảm giá</p>
+                    <p class="text-lg font-semibold text-gray-800">{{ coupon.description|default:"Không có mô tả" }}</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500 mb-1">Giá trị giảm</p>
+                    <p class="text-lg font-semibold text-red-600">{{ coupon.discount_value }}</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500 mb-1">Đơn tối thiểu</p>
+                    <p class="text-lg font-semibold text-gray-800">{{ coupon.min_order_value|floatformat:0 }}đ</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500 mb-1">Số lượng</p>
+                    <p class="text-lg font-semibold text-gray-800">{{ coupon.quota|default:"Không giới hạn" }} mã</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500 mb-1">Hạn dùng</p>
+                    <p class="text-lg font-semibold text-gray-800">{{ coupon.expiry_date|date:"d/m/Y H:i" }}</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500 mb-1">Trạng thái</p>
+                    <p class="text-lg font-semibold {% if coupon.status == 'approved' %}text-green-600{% else %}text-yellow-600{% endif %}">
+                        {{ coupon.get_status_display }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Điều kiện áp dụng -->
+            {% if coupon.description %}
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Điều kiện áp dụng:</h3>
+                <p class="text-gray-600">{{ coupon.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Nút hành động -->
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button onclick="copyCode('{{ coupon.code }}')" 
+                        class="flex-1 bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 transition font-semibold text-lg">
+                    <i class="fas fa-copy mr-2"></i>COPY MÃ
+                </button>
+                {% if user.is_authenticated %}
+                    {% if is_saved %}
+                        <button onclick="unsaveCoupon({{ coupon.coupon_id }})" 
+                                class="flex-1 bg-gray-200 text-gray-700 py-4 rounded-lg hover:bg-gray-300 transition font-semibold text-lg">
+                            <i class="fas fa-bookmark mr-2"></i>Đã lưu
+                        </button>
+                    {% else %}
+                        <button onclick="saveCoupon({{ coupon.coupon_id }})" 
+                                class="flex-1 bg-yellow-500 text-white py-4 rounded-lg hover:bg-yellow-600 transition font-semibold text-lg">
+                            <i class="far fa-bookmark mr-2"></i>Lưu mã
+                        </button>
+                    {% endif %}
+                {% endif %}
+                {% if coupon.affiliate_link %}
+                <a href="{{ coupon.affiliate_link }}" target="_blank" 
+                   class="flex-1 bg-green-600 text-white py-4 rounded-lg hover:bg-green-700 transition font-semibold text-lg text-center">
+                    <i class="fas fa-external-link-alt mr-2"></i>Dùng ngay
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyCode(code) {
+    navigator.clipboard.writeText(code).then(function() {
+        alert('Đã sao chép mã: ' + code);
+    }, function(err) {
+        alert('Lỗi khi sao chép mã');
+    });
+}
+
+function saveCoupon(couponId) {
+    fetch(`/save/${couponId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+}
+
+function unsaveCoupon(couponId) {
+    fetch(`/unsave/${couponId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+}
+</script>
+{% endblock %}
+
+
+

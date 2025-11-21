@@ -1,0 +1,135 @@
+{% extends 'coupons/admin/base_admin.html' %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow p-8">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">{{ title }}</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Sàn *</label>
+                    {{ form.platform }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Code *</label>
+                    {{ form.code }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tiêu đề *</label>
+                    {{ form.title }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
+                    {{ form.description }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Giá trị giảm *</label>
+                    {{ form.discount_value }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Đơn tối thiểu</label>
+                    {{ form.min_order_value }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Số lượng (Quota)</label>
+                    {{ form.quota }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Hạn dùng *</label>
+                    {{ form.expiry_date }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Link liên kết</label>
+                    {{ form.affiliate_link }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái *</label>
+                    {{ form.status }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Danh mục</label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {% for checkbox in form.categories %}
+                        <label class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg hover:bg-blue-50 cursor-pointer transition">
+                            {{ checkbox.tag }}
+                            <span class="text-sm text-gray-700">{{ checkbox.choice_label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- 🎯 Affiliate Marketing Section -->
+                <div class="md:col-span-2 mt-4 p-4 bg-orange-50 border-2 border-orange-200 rounded-lg">
+                    <h4 class="text-lg font-bold text-orange-700 mb-4">🎯 Tiếp thị liên kết (Affiliate)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center space-x-2">
+                            {{ form.is_affiliate }}
+                            <label class="text-sm font-medium text-gray-700">Là mã Affiliate</label>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            {{ form.is_featured }}
+                            <label class="text-sm font-medium text-gray-700">⭐ Hiển thị nổi bật</label>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">% Hoa hồng</label>
+                            {{ form.affiliate_commission }}
+                            <p class="text-xs text-gray-500 mt-1">VD: 5.50 = 5.5%</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Điểm ưu tiên (0-100)</label>
+                            {{ form.priority_score }}
+                            <p class="text-xs text-gray-500 mt-1">Càng cao càng ưu tiên</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 flex space-x-4">
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-save mr-2"></i>Lưu
+                </button>
+                <a href="{% url 'coupons:admin_coupon_list' %}" 
+                   class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition">
+                    Hủy
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    input, select, textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        focus:outline-none;
+        focus:ring-2;
+        focus:ring-blue-500;
+    }
+    
+    /* Style cho checkbox danh mục */
+    input[type="checkbox"] {
+        width: auto;
+        height: 1rem;
+        cursor: pointer;
+        accent-color: #2563eb;
+    }
+    
+    /* Ẩn list style mặc định của Django */
+    #id_categories {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    #id_categories li {
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+
+

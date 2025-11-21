@@ -1,0 +1,24 @@
+{% extends 'coupons/admin/base_admin.html' %}
+
+{% block page_title %}Quản lý Sàn{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-xl font-bold text-gray-800 mb-6">Danh sách sàn TMĐT</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for platform in platforms %}
+        <div class="border rounded-lg p-4">
+            <h4 class="text-lg font-semibold text-gray-800">{{ platform.name }}</h4>
+            {% if platform.logo_url %}
+            <img src="{{ platform.logo_url }}" alt="{{ platform.name }}" class="mt-2 h-16 object-contain">
+            {% endif %}
+        </div>
+        {% empty %}
+        <p class="text-gray-500">Chưa có sàn nào</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+
+

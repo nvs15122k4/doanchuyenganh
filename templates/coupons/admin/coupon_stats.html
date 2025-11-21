@@ -1,0 +1,114 @@
+{% extends 'coupons/admin/base_admin.html' %}
+
+{% block title %}Thống kê Coupons - Admin{% endblock %}
+{% block page_title %}📊 Thống kê Coupons{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Bộ lọc -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Platform</label>
+                <select name="platform" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    <option value="">Tất cả</option>
+                    {% for platform in platforms %}
+                    <option value="{{ platform.platform_id }}" {% if selected_platform == platform.platform_id|stringformat:"s" %}selected{% endif %}>
+                        {{ platform.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                <select name="status" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    <option value="">Tất cả</option>
+                    <option value="approved" {% if selected_status == 'approved' %}selected{% endif %}>Đã duyệt</option>
+                    <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Chờ duyệt</option>
+                    <option value="expired" {% if selected_status == 'expired' %}selected{% endif %}>Hết hạn</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Sắp xếp</label>
+                <select name="sort" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    <option value="-view_count" {% if sort_by == '-view_count' %}selected{% endif %}>Lượt xem (cao → thấp)</option>
+                    <option value="-use_count" {% if sort_by == '-use_count' %}selected{% endif %}>Lượt dùng (cao → thấp)</option>
+                    <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Mới nhất</option>
+                    <option value="quota" {% if sort_by == 'quota' %}selected{% endif %}>Quota (thấp → cao)</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-filter mr-2"></i>Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bảng thống kê -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mã</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tiêu đề</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Platform</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Views</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Uses</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quota</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for coupon in coupons %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-4">
+                            <span class="font-mono text-sm font-semibold text-blue-600">{{ coupon.code }}</span>
+                        </td>
+                        <td class="px-4 py-4">
+                            <div class="text-sm font-medium text-gray-900">{{ coupon.title|truncatewords:5 }}</div>
+                            <div class="text-xs text-gray-500">{{ coupon.discount_value }}</div>
+                        </td>
+                        <td class="px-4 py-4">
+                            <span class="text-sm text-gray-700">{{ coupon.platform.name }}</span>
+                        </td>
+                        <td class="px-4 py-4 text-right">
+                            <span class="text-lg font-bold text-purple-600">{{ coupon.view_count }}</span>
+                        </td>
+                        <td class="px-4 py-4 text-right">
+                            <span class="text-lg font-bold text-orange-600">{{ coupon.use_count }}</span>
+                        </td>
+                        <td class="px-4 py-4 text-right">
+                            {% if coupon.quota %}
+                                <span class="text-sm {% if coupon.quota < 100 %}text-red-600 font-bold{% else %}text-gray-700{% endif %}">
+                                    {{ coupon.quota }}
+                                </span>
+                            {% else %}
+                                <span class="text-sm text-gray-400">∞</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            {% if coupon.status == 'approved' %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Đã duyệt</span>
+                            {% elif coupon.status == 'pending' %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Chờ duyệt</span>
+                            {% else %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Hết hạn</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                            Không có dữ liệu
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

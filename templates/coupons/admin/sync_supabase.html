@@ -1,0 +1,168 @@
+{% extends 'coupons/admin/base_admin.html' %}
+
+{% block title %}Đồng bộ Supabase - Admin CouponHub{% endblock %}
+{% block page_title %}🔄 Đồng bộ mã từ Supabase{% endblock %}
+
+{% block content %}
+<!-- Thông tin kết nối -->
+<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+        <i class="fas fa-database text-green-600 mr-2"></i>
+        Thông tin kết nối Supabase
+    </h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-gray-50 rounded-lg p-4">
+            <div class="text-sm text-gray-600 mb-1">Supabase URL</div>
+            <div class="font-mono text-sm {% if supabase_url == 'Chưa cấu hình' %}text-red-600{% else %}text-green-600{% endif %}">
+                {{ supabase_url }}
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 rounded-lg p-4">
+            <div class="text-sm text-gray-600 mb-1">API Key</div>
+            <div class="font-mono text-sm {% if supabase_key_exists %}text-green-600{% else %}text-red-600{% endif %}">
+                {% if supabase_key_exists %}
+                    ✓ Đã cấu hình
+                {% else %}
+                    ✗ Chưa cấu hình
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    {% if not supabase_key_exists or supabase_url == 'Chưa cấu hình' %}
+    <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+        <div class="flex">
+            <i class="fas fa-exclamation-triangle text-yellow-400 mr-3 mt-1"></i>
+            <div>
+                <p class="text-sm text-yellow-700 font-semibold">Chưa cấu hình Supabase</p>
+                <p class="text-sm text-yellow-600 mt-1">
+                    Vui lòng thêm vào <code class="bg-yellow-100 px-2 py-1 rounded">settings.py</code>:
+                </p>
+                <pre class="bg-yellow-100 text-yellow-800 p-3 rounded mt-2 text-xs overflow-x-auto">SUPABASE_URL = "https://your-project.supabase.co"
+SUPABASE_ANON_KEY = "your-anon-key"</pre>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Thống kê -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="text-4xl font-bold mb-2">{{ stats.total_coupons }}</div>
+        <div class="text-blue-100">Tổng số mã</div>
+    </div>
+    
+    <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="text-4xl font-bold mb-2">{{ stats.synced_coupons }}</div>
+        <div class="text-green-100">Đã đồng bộ</div>
+    </div>
+    
+    <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="text-4xl font-bold mb-2">{{ stats.shopee_count }}</div>
+        <div class="text-orange-100">Shopee</div>
+    </div>
+    
+    <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="text-4xl font-bold mb-2">{{ stats.lazada_count }}</div>
+        <div class="text-purple-100">Lazada</div>
+    </div>
+</div>
+
+<!-- Nút đồng bộ cho từng sàn -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    {% for platform in platforms_data %}
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-1">
+        <div class="bg-gradient-to-r from-{{ platform.color }}-500 to-{{ platform.color }}-600 p-6 text-white">
+            <div class="flex items-center justify-between mb-4">
+                <i class="fas {{ platform.icon }} text-5xl opacity-20"></i>
+                <div class="text-right">
+                    <div class="text-3xl font-bold">
+                        {% if platform.name == 'Shopee' %}{{ stats.shopee_count }}
+                        {% elif platform.name == 'Lazada' %}{{ stats.lazada_count }}
+                        {% else %}{{ stats.tiktok_count }}{% endif %}
+                    </div>
+                    <div class="text-sm opacity-80">mã hiện có</div>
+                </div>
+            </div>
+            <h3 class="text-2xl font-bold">{{ platform.name }}</h3>
+        </div>
+        
+        <div class="p-6">
+            <div class="mb-4">
+                <div class="text-sm text-gray-600 mb-1">Bảng Supabase</div>
+                <div class="font-mono text-sm bg-gray-100 px-3 py-2 rounded">{{ platform.table }}</div>
+            </div>
+            
+            <form method="post" onsubmit="return confirm('Bạn có chắc muốn đồng bộ mã từ {{ platform.name }}?');">
+                {% csrf_token %}
+                <input type="hidden" name="platform_table" value="{{ platform.table }}">
+                <input type="hidden" name="platform_name" value="{{ platform.name }}">
+                
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-{{ platform.color }}-500 to-{{ platform.color }}-600 text-white px-6 py-3 rounded-lg hover:from-{{ platform.color }}-600 hover:to-{{ platform.color }}-700 transition font-semibold shadow-md"
+                        {% if not supabase_key_exists or supabase_url == 'Chưa cấu hình' %}disabled{% endif %}>
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Đồng bộ {{ platform.name }}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Hướng dẫn -->
+<div class="bg-white rounded-xl shadow-lg p-6">
+    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+        <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+        Hướng dẫn sử dụng
+    </h2>
+    
+    <div class="space-y-4">
+        <div class="flex items-start">
+            <div class="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 flex-shrink-0">1</div>
+            <div>
+                <h3 class="font-semibold text-gray-800 mb-1">Cấu hình Supabase</h3>
+                <p class="text-gray-600 text-sm">Thêm <code class="bg-gray-100 px-2 py-1 rounded">SUPABASE_URL</code> và <code class="bg-gray-100 px-2 py-1 rounded">SUPABASE_ANON_KEY</code> vào <code class="bg-gray-100 px-2 py-1 rounded">settings.py</code></p>
+            </div>
+        </div>
+        
+        <div class="flex items-start">
+            <div class="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 flex-shrink-0">2</div>
+            <div>
+                <h3 class="font-semibold text-gray-800 mb-1">Tạo mã trên Supabase</h3>
+                <p class="text-gray-600 text-sm">Vào Supabase Dashboard > Table Editor > Chọn bảng (shopee_coupons, lazada_coupons, tiktok_coupons) > Insert row</p>
+            </div>
+        </div>
+        
+        <div class="flex items-start">
+            <div class="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 flex-shrink-0">3</div>
+            <div>
+                <h3 class="font-semibold text-gray-800 mb-1">Đồng bộ về website</h3>
+                <p class="text-gray-600 text-sm">Click nút "Đồng bộ" tương ứng với sàn bạn muốn lấy mã về</p>
+            </div>
+        </div>
+        
+        <div class="flex items-start">
+            <div class="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 flex-shrink-0">4</div>
+            <div>
+                <h3 class="font-semibold text-gray-800 mb-1">Kiểm tra kết quả</h3>
+                <p class="text-gray-600 text-sm">Xem thông báo kết quả đồng bộ và kiểm tra tại <a href="{% url 'coupons:admin_coupon_list' %}" class="text-blue-600 hover:underline">Quản lý Mã giảm giá</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script để tự động reload sau khi đồng bộ -->
+<script>
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const button = this.querySelector('button[type="submit"]');
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang đồng bộ...';
+    });
+});
+</script>
+{% endblock %}

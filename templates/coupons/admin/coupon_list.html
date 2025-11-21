@@ -1,0 +1,111 @@
+{% extends 'coupons/admin/base_admin.html' %}
+
+{% block page_title %}Quản lý Mã giảm giá{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <h3 class="text-xl font-bold text-gray-800">Danh sách mã giảm giá</h3>
+    <a href="{% url 'coupons:admin_coupon_create' %}" 
+       class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+        <i class="fas fa-plus mr-2"></i>Thêm mã mới
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="bg-white rounded-lg shadow p-4 mb-6">
+    <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <input type="text" name="search" value="{{ search_query }}" 
+               placeholder="Tìm kiếm..." 
+               class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select name="platform" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">Tất cả sàn</option>
+            {% for platform in platforms %}
+            <option value="{{ platform.platform_id }}" {% if platform_filter == platform.platform_id|stringformat:"s" %}selected{% endif %}>
+                {{ platform.name }}
+            </option>
+            {% endfor %}
+        </select>
+        <select name="status" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">Tất cả trạng thái</option>
+            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Chờ duyệt</option>
+            <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Đã duyệt</option>
+            <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Hết hạn</option>
+        </select>
+        <button type="submit" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+            <i class="fas fa-filter mr-2"></i>Lọc
+        </button>
+    </form>
+</div>
+
+<!-- Table -->
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sàn</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tiêu đề</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mức giảm</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hạn dùng</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hành động</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            {% for coupon in page_obj %}
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ coupon.coupon_id }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono font-semibold">{{ coupon.code }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ coupon.platform.name }}</td>
+                <td class="px-6 py-4 text-sm text-gray-900">{{ coupon.title }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">{{ coupon.discount_value }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ coupon.expiry_date|date:"d/m/Y" }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 text-xs rounded-full {% if coupon.status == 'approved' %}bg-green-100 text-green-800{% elif coupon.status == 'pending' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ coupon.get_status_display }}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <a href="{% url 'coupons:admin_coupon_edit' coupon.coupon_id %}" 
+                       class="text-blue-600 hover:text-blue-900 mr-3">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form method="POST" action="{% url 'coupons:admin_coupon_delete' coupon.coupon_id %}" 
+                          class="inline" onsubmit="return confirm('Bạn có chắc muốn xóa mã này?');">
+                        {% csrf_token %}
+                        <button type="submit" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="px-6 py-4 text-center text-gray-500">Không có mã giảm giá nào</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="mt-6 flex justify-center">
+    <div class="flex space-x-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+           class="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50">Trước</a>
+        {% endif %}
+        <span class="px-4 py-2 bg-blue-600 text-white rounded-lg">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+           class="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50">Sau</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+
+

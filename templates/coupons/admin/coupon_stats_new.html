@@ -1,0 +1,109 @@
+{% extends 'coupons/admin/base_admin.html' %}
+
+{% block title %}Thống kê Coupons - Admin{% endblock %}
+{% block page_title %}📊 Thống kê Coupons{% endblock %}
+
+{% block content %}
+<!-- Biểu đồ tròn theo Platform -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Biểu đồ: Tổng mã -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Tổng mã theo sàn</h3>
+        <canvas id="chartTotalCoupons" height="250"></canvas>
+    </div>
+    
+    <!-- Biểu đồ: Lượt xem -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Lượt xem theo sàn</h3>
+        <canvas id="chartViews" height="250"></canvas>
+    </div>
+    
+    <!-- Biểu đồ: Lượt dùng -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Lượt dùng theo sàn</h3>
+        <canvas id="chartUses" height="250"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Dữ liệu từ Django
+const platformData = {
+    labels: [{% for p in platform_stats %}'{{ p.name }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+    totalCoupons: [{% for p in platform_stats %}{{ p.total_coupons }}{% if not forloop.last %},{% endif %}{% endfor %}],
+    totalViews: [{% for p in platform_stats %}{{ p.total_views|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+    totalUses: [{% for p in platform_stats %}{{ p.total_uses|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}]
+};
+
+const colors = ['#FF6384', '#36A2EB', '#FFCE56'];
+
+// Biểu đồ 1: Tổng mã
+new Chart(document.getElementById('chartTotalCoupons'), {
+    type: 'pie',
+    data: {
+        labels: platformData.labels,
+        datasets: [{
+            data: platformData.totalCoupons,
+            backgroundColor: colors,
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Biểu đồ 2: Lượt xem
+new Chart(document.getElementById('chartViews'), {
+    type: 'pie',
+    data: {
+        labels: platformData.labels,
+        datasets: [{
+            data: platformData.totalViews,
+            backgroundColor: colors,
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Biểu đồ 3: Lượt dùng
+new Chart(document.getElementById('chartUses'), {
+    type: 'pie',
+    data: {
+        labels: platformData.labels,
+        datasets: [{
+            data: platformData.totalUses,
+            backgroundColor: colors,
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

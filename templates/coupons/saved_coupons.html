@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Mã đã lưu - CouponHub{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">Các mã giảm giá đã lưu</h1>
+    
+    {% if saved_coupons %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for saved in saved_coupons %}
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        {% if saved.coupon.platform.name == 'Shopee' %}
+                            <i class="fas fa-shopping-bag text-orange-500"></i>
+                        {% elif saved.coupon.platform.name == 'Lazada' %}
+                            <i class="fas fa-store text-orange-400"></i>
+                        {% elif saved.coupon.platform.name == 'TikTok' %}
+                            <i class="fab fa-tiktok text-black"></i>
+                        {% else %}
+                            <i class="fas fa-store text-blue-500"></i>
+                        {% endif %}
+                        <span class="text-sm font-semibold text-gray-600">{{ saved.coupon.platform.name }}</span>
+                    </div>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">{{ saved.coupon.title }}</h3>
+                <p class="text-xl font-bold text-red-600 mb-2">Giảm {{ saved.coupon.discount_value }}</p>
+                <p class="text-sm text-gray-500 mb-4">Hạn dùng: {{ saved.coupon.expiry_date|date:"d/m/Y" }}</p>
+                <div class="flex space-x-2">
+                    <button onclick="copyCode('{{ saved.coupon.code }}')" 
+                            class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold">
+                        <i class="fas fa-copy mr-1"></i>COPY
+                    </button>
+                    <button onclick="unsaveCoupon({{ saved.coupon.coupon_id }})" 
+                            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition text-sm font-semibold">
+                        <i class="fas fa-trash mr-1"></i>Bỏ lưu
+                    </button>
+                </div>
+                {% if saved.coupon.affiliate_link %}
+                <a href="{{ saved.coupon.affiliate_link }}" target="_blank" 
+                   class="mt-2 block w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition text-center text-sm font-semibold">
+                    <i class="fas fa-external-link-alt mr-1"></i>Dùng ngay
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12 bg-white rounded-lg shadow-md">
+        <i class="fas fa-bookmark text-4xl text-gray-400 mb-4"></i>
+        <p class="text-gray-600 text-lg mb-4">Bạn chưa lưu mã giảm giá nào</p>
+        <a href="{% url 'coupons:home' %}" class="text-blue-600 hover:text-blue-700 font-semibold">
+            Khám phá mã giảm giá ngay →
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function copyCode(code) {
+    navigator.clipboard.writeText(code).then(function() {
+        alert('Đã sao chép mã: ' + code);
+    });
+}
+
+function unsaveCoupon(couponId) {
+    if (confirm('Bạn có chắc muốn bỏ lưu mã này?')) {
+        fetch(`/unsave/${couponId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
+
+
+

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin - CouponHub{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-900 text-white flex-shrink-0">
+            <div class="p-6">
+                <a href="{% url 'coupons:home' %}" class="flex items-center space-x-3 text-xl font-bold">
+                    <i class="fas fa-ticket-alt text-blue-400"></i>
+                    <span>CouponHub</span>
+                </a>
+                <p class="text-gray-400 text-sm mt-2">Quản trị viên</p>
+            </div>
+            
+            <nav class="mt-6">
+                <a href="{% url 'coupons:admin_dashboard' %}" class="flex items-center space-x-3 px-6 py-3 hover:bg-gray-800 transition {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gray-800 border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span>Tổng quan</span>
+                </a>
+                
+                <a href="{% url 'coupons:admin_coupon_list' %}" class="flex items-center space-x-3 px-6 py-3 hover:bg-gray-800 transition {% if 'coupon' in request.resolver_match.url_name %}bg-gray-800 border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-ticket-alt w-5"></i>
+                    <span>Quản lý Mã giảm giá</span>
+                </a>
+                
+                <a href="{% url 'coupons:admin_user_stats' %}" class="flex items-center space-x-3 px-6 py-3 hover:bg-gray-800 transition {% if 'user' in request.resolver_match.url_name %}bg-gray-800 border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-users w-5"></i>
+                    <span>Quản lý Người dùng</span>
+                </a>
+                
+                <a href="{% url 'coupons:admin_support_tickets' %}" class="flex items-center space-x-3 px-6 py-3 hover:bg-gray-800 transition {% if 'support' in request.resolver_match.url_name %}bg-gray-800 border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-headset w-5"></i>
+                    <span>Hỗ trợ khách hàng</span>
+                </a>
+                
+                <div class="border-t border-gray-700 my-4"></div>
+                
+                <a href="{% url 'coupons:admin_sync_supabase' %}" class="flex items-center space-x-3 px-6 py-3 hover:bg-gray-800 transition {% if 'sync' in request.resolver_match.url_name %}bg-gray-800 border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-sync w-5"></i>
+                    <span>Đồng bộ API Sàn</span>
+                </a>
+                
+                <div class="border-t border-gray-700 my-4"></div>
+                
+                <a href="{% url 'coupons:home' %}" class="flex items-center space-x-3 px-6 py-3 hover:bg-gray-800 transition text-gray-400">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Về trang chủ</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h1 class="text-2xl font-bold text-gray-800">{% block page_title %}Dashboard{% endblock %}</h1>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-gray-600">{{ user.email }}</span>
+                        <a href="{% url 'coupons:logout' %}" class="text-red-600 hover:text-red-700">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                    <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% elif message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

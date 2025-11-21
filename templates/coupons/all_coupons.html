@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block title %}Tất cả mã giảm giá - CouponHub{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">
+            <i class="fas fa-tags text-blue-600 mr-3"></i>
+            Tất cả mã giảm giá
+        </h1>
+        <p class="text-gray-600">Khám phá hàng nghìn mã giảm giá từ các sàn thương mại điện tử</p>
+    </div>
+    
+    <!-- Search & Filter -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <form method="GET" action="{% url 'coupons:all_coupons' %}" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Search -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-search mr-2"></i>Tìm kiếm
+                    </label>
+                    <input 
+                        type="text" 
+                        name="search" 
+                        value="{{ search_query }}"
+                        placeholder="Nhập mã, tên sản phẩm..."
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+                
+                <!-- Platform Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-filter mr-2"></i>Sàn thương mại
+                    </label>
+                    <select 
+                        name="platform"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Tất cả sàn</option>
+                        {% for platform in platforms %}
+                            <option value="{{ platform.platform_id }}" {% if platform_filter == platform.platform_id|stringformat:"s" %}selected{% endif %}>
+                                {{ platform.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Sort -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-sort mr-2"></i>Sắp xếp
+                    </label>
+                    <select 
+                        name="sort"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Mới nhất</option>
+                        <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Cũ nhất</option>
+                        <option value="expiry_date" {% if sort_by == 'expiry_date' %}selected{% endif %}>Sắp hết hạn</option>
+                        <option value="-expiry_date" {% if sort_by == '-expiry_date' %}selected{% endif %}>Còn hạn lâu</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <a href="{% url 'coupons:all_coupons' %}" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                    <i class="fas fa-redo mr-2"></i>Làm mới
+                </a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-search mr-2"></i>Tìm kiếm
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Results Count -->
+    <div class="mb-6">
+        <p class="text-gray-600">
+            Tìm thấy <strong class="text-blue-600">{{ page_obj.paginator.count }}</strong> mã giảm giá
+        </p>
+    </div>
+    
+    <!-- Coupons List -->
+    <div class="space-y-4">
+        {% for coupon in page_obj %}
+            <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <div class="flex flex-col md:flex-row">
+                    <!-- Platform Badge -->
+                    <div class="md:w-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-6">
+                        <div class="text-center">
+                            <div class="text-white text-4xl mb-2">
+                                {% if coupon.platform.name == 'Shopee' %}
+                                    <i class="fas fa-shopping-bag"></i>
+                                {% elif coupon.platform.name == 'Lazada' %}
+                                    <i class="fas fa-shopping-cart"></i>
+                                {% elif coupon.platform.name == 'TikTok Shop' %}
+                                    <i class="fab fa-tiktok"></i>
+                                {% else %}
+                                    <i class="fas fa-store"></i>
+                                {% endif %}
+                            </div>
+                            <p class="text-white font-bold text-lg">{{ coupon.platform.name }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Coupon Info -->
+                    <div class="flex-1 p-6">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">
+                                    {{ coupon.title }}
+                                </h3>
+                                
+                                <p class="text-gray-600 mb-3">
+                                    {{ coupon.description|truncatewords:20 }}
+                                </p>
+                                
+                                <div class="flex flex-wrap gap-3 mb-3">
+                                    <!-- Discount Badge -->
+                                    <span class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
+                                        <i class="fas fa-tag mr-2"></i>
+                                        {{ coupon.discount_value }}
+                                    </span>
+                                    
+                                    <!-- Expiry Date -->
+                                    <span class="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                                        <i class="far fa-clock mr-2"></i>
+                                        HSD: {{ coupon.expiry_date|date:"d/m/Y" }}
+                                    </span>
+                                    
+                                    <!-- Status -->
+                                    <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                                        <i class="fas fa-check-circle mr-2"></i>
+                                        Còn hạn
+                                    </span>
+                                </div>
+                                
+                                <!-- Coupon Code -->
+                                <div class="flex items-center space-x-3">
+                                    <div class="bg-gray-100 px-4 py-2 rounded-lg border-2 border-dashed border-gray-300">
+                                        <code class="text-lg font-mono font-bold text-blue-600">{{ coupon.code }}</code>
+                                    </div>
+                                    <button 
+                                        onclick="copyCode('{{ coupon.code }}')"
+                                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                    >
+                                        <i class="fas fa-copy mr-2"></i>Copy
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="mt-4 md:mt-0 md:ml-6 flex flex-col space-y-2">
+                                <a 
+                                    href="{% url 'coupons:coupon_detail' coupon.coupon_id %}"
+                                    class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-center"
+                                >
+                                    <i class="fas fa-info-circle mr-2"></i>Chi tiết
+                                </a>
+                                
+                                {% if user.is_authenticated %}
+                                    <a 
+                                        href="{% url 'coupons:save_coupon' coupon.coupon_id %}"
+                                        class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center"
+                                    >
+                                        <i class="fas fa-bookmark mr-2"></i>Lưu
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="bg-white rounded-lg shadow-md p-12 text-center">
+                <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+                <p class="text-xl text-gray-600 mb-2">Không tìm thấy mã giảm giá nào</p>
+                <p class="text-gray-500">Thử thay đổi bộ lọc hoặc tìm kiếm khác</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="mt-8 flex justify-center">
+            <nav class="flex items-center space-x-2">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+                       class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+                       class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                {% endif %}
+                
+                <span class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+                       class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+                       class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function copyCode(code) {
+    navigator.clipboard.writeText(code).then(function() {
+        // Show success message
+        alert('Đã copy mã: ' + code);
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+</script>
+{% endblock %}
