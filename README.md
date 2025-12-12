@@ -222,6 +222,21 @@ Sau khi thiết lập, truy cập `/admin/integrations/vouchers/` để lấy JS
 - Database có thể chuyển đổi giữa SQLite (dev) và MySQL (production)
 - Tất cả các chức năng đã được triển khai đầy đủ theo yêu cầu
 
+## 🚀 Deploy lên Render.com với MySQL
+
+Xem hướng dẫn chi tiết trong file **[DEPLOY.md](DEPLOY.md)**
+
+### Các bước nhanh (15 phút):
+
+1. **Kiểm tra:** `python check_deploy.py`
+2. **Tạo SECRET_KEY:** `python generate_secret_key.py`
+3. **Push lên GitHub**
+4. **Tạo MySQL Database trên Render**
+5. **Tạo Web Service và deploy**
+6. **Tạo superuser và test**
+
+✅ Website sẽ online tại: `https://couponhub.onrender.com`
+
 ## Tác giả
 
 Nguyễn Văn Sang - Đồ án tốt nghiệp - CouponHub
