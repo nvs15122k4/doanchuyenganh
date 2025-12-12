@@ -1,0 +1,24 @@
+📁 CÁC FILE QUAN TRỌNG CHO DEPLOY
+
+✅ CẦN THIẾT (đã có sẵn):
+├── Procfile                    - Lệnh start server
+├── runtime.txt                 - Python version
+├── requirements.txt            - Packages cần cài
+├── .gitignore                  - Không commit file nhạy cảm
+├── .env.example                - Mẫu biến môi trường
+└── CouponHub/settings.py       - Cấu hình Django
+
+📖 HƯỚNG DẪN:
+├── QUICKSTART.md               - Deploy nhanh 15 phút
+├── DEPLOY.md                   - Hướng dẫn chi tiết đầy đủ
+└── README.md                   - Tổng quan dự án
+
+🔧 TOOLS:
+├── check_deploy.py             - Kiểm tra cấu hình
+└── generate_secret_key.py      - Tạo SECRET_KEY mới
+
+---
+
+🚀 BẮT ĐẦU:
+1. Đọc QUICKSTART.md (nhanh)
+2. Hoặc DEPLOY.md (chi tiết)

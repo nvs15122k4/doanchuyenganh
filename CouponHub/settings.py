@@ -31,9 +31,9 @@ load_dotenv(BASE_DIR / '.env')
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-h_490%*ko76hvldlq%y0i#x(y=+yb6__zk#0csadr1a!s_kktz')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',') if os.getenv('DJANGO_ALLOWED_HOSTS') else []
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',') if os.getenv('DJANGO_ALLOWED_HOSTS') else ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -83,29 +84,45 @@ WSGI_APPLICATION = 'CouponHub.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DEFAULT_DB_ENGINE = os.getenv('DB_ENGINE', 'django.db.backends.mysql')
+import dj_database_url
 
-if DEFAULT_DB_ENGINE == 'django.db.backends.mysql':
-    default_db_name = os.getenv('DB_NAME', 'couponhub')
-else:
-    default_db_name = os.getenv('DB_NAME', BASE_DIR / 'db.sqlite3')
+# Database configuration with dj-database-url support
+DATABASE_URL = os.getenv('DATABASE_URL')
 
-DATABASES = {
-    'default': {
-        'ENGINE': DEFAULT_DB_ENGINE,
-        'NAME': default_db_name,
-        'USER': os.getenv('DB_USER', 'root' if DEFAULT_DB_ENGINE == 'django.db.backends.mysql' else ''),
-        'PASSWORD': os.getenv('DB_PASSWORD', '1234' if DEFAULT_DB_ENGINE == 'django.db.backends.mysql' else ''),
-        'HOST': os.getenv('DB_HOST', 'localhost' if DEFAULT_DB_ENGINE == 'django.db.backends.mysql' else ''),
-        'PORT': os.getenv('DB_PORT', '3306' if DEFAULT_DB_ENGINE == 'django.db.backends.mysql' else ''),
+if DATABASE_URL:
+    # Use DATABASE_URL if provided (for Render, Railway, etc.)
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
-
-if DEFAULT_DB_ENGINE == 'django.db.backends.mysql':
-    DATABASES['default']['OPTIONS'] = {
-        'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        'charset': 'utf8mb4',
-}
+else:
+    # Fallback to manual configuration
+    DEFAULT_DB_ENGINE = os.getenv('DB_ENGINE', 'django.db.backends.mysql')
+    
+    if DEFAULT_DB_ENGINE == 'django.db.backends.mysql':
+        default_db_name = os.getenv('DB_NAME', 'couponhub')
+    else:
+        default_db_name = os.getenv('DB_NAME', str(BASE_DIR / 'db.sqlite3'))
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': DEFAULT_DB_ENGINE,
+            'NAME': default_db_name,
+            'USER': os.getenv('DB_USER', 'root' if DEFAULT_DB_ENGINE == 'django.db.backends.mysql' else ''),
+            'PASSWORD': os.getenv('DB_PASSWORD', '1234' if DEFAULT_DB_ENGINE == 'django.db.backends.mysql' else ''),
+            'HOST': os.getenv('DB_HOST', 'localhost' if DEFAULT_DB_ENGINE == 'django.db.backends.mysql' else ''),
+            'PORT': os.getenv('DB_PORT', '3306' if DEFAULT_DB_ENGINE == 'django.db.backends.mysql' else ''),
+        }
+    }
+    
+    if DEFAULT_DB_ENGINE == 'django.db.backends.mysql':
+        DATABASES['default']['OPTIONS'] = {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+        }
 
 
 # Password validation
@@ -145,6 +162,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise configuration for serving static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = 'media/'
