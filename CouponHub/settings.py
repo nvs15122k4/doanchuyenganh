@@ -40,7 +40,14 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-h_490%*ko76hvldlq%y
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',') if os.getenv('DJANGO_ALLOWED_HOSTS') else ['localhost', '127.0.0.1']
+ALLOWED_HOSTS_ENV = os.getenv('DJANGO_ALLOWED_HOSTS', '')
+if ALLOWED_HOSTS_ENV:
+    ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_ENV.split(',') if host.strip()]
+    # Add wildcard support for .render.com, .onrender.com, etc.
+    if '.render.com' in ALLOWED_HOSTS or '.onrender.com' in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.extend(['couponhub-dp9u.onrender.com', '*.onrender.com'])
+else:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
