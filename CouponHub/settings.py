@@ -13,6 +13,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+# PyMySQL as MySQLdb for MySQL support
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+except ImportError:
+    pass
+
 try:
     from dotenv import load_dotenv  # type: ignore
 except ImportError:  # pragma: no cover
